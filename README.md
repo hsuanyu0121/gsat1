@@ -220,8 +220,8 @@
     try {
         // 2. 📍 安全密鑰還原 (請填入你的 Base64 亂碼)
         const _p = [
-            QUl6YVN5RHNSeUk3QTZ // 例如 "QUl6YVN5"
-            tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr  // 例如 "REU0NTY3"
+            QUl6YVN5RHNSeUk3QTZ// 例如 "QUl6YVN5"
+            tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr// 例如 "REU0NTY3"
         ];
         const _k = atob(_p.join('')); 
         
