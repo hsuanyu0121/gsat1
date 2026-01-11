@@ -220,8 +220,8 @@
     try {
         // 2. 📍 安全密鑰還原 (請填入你的 Base64 亂碼)
         const _p = [
-            "在此填入前半段亂碼", // 例如 "QUl6YVN5"
-            "在此填入後半段亂碼"  // 例如 "REU0NTY3"
+            QUl6YVN5RHNSeUk3QTZ // 例如 "QUl6YVN5"
+            tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr  // 例如 "REU0NTY3"
         ];
         const _k = atob(_p.join('')); 
         
@@ -232,7 +232,7 @@
             contents: [{
                 parts: [{
                     text: `你現在是 P!LOT 網站的 AI 教師學長。
-                    請針對以下學生問題進行學測考點分析與解答建議：
+                    請針對以下學生問題搜尋網路上的歷屆考題與解析或是由網頁中的資料庫進行學測考點分析與解答建議：
                     問題：${userInput}
                     
                     要求：
