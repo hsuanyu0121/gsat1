@@ -202,35 +202,69 @@
         }
 
         // AI 診斷邏輯
-        function runAIDiagnose() {
-            const input = document.getElementById('aiInput').value;
-            if (!input) return;
+        async function aiDiagnose() {
+    // 1. 基本檢查：確認輸入框不是空的
+    const userInputField = document.getElementById('aiInput');
+    const responseArea = document.getElementById('aiResponse');
+    const responseText = document.getElementById('aiText');
+    
+    if (!userInputField.value.trim()) {
+        alert("請輸入你想詢問的題號或問題！");
+        return;
+    }
 
-            const res = document.getElementById('aiResponse');
-            const guide = document.getElementById('guideCard');
-            res.classList.remove('hidden');
-            guide.classList.remove('hidden');
+    const userInput = userInputField.value.trim();
+    responseArea.classList.remove('hidden');
+    responseText.innerText = "🤖 P!LOT 正在分析考點中...";
 
-            // 模擬分析邏輯
-            document.getElementById('pointText').innerText = `📍 命題考點：空間向量與內積`;
-            document.getElementById('analysisText').innerText = `此題錯誤在於未考慮向量夾角為鈍角時，內積應為負值。這在近三年學測數 A 中出現頻率高達 80%。`;
+    try {
+        // 2. 📍 安全密鑰還原 (請填入你的 Base64 亂碼)
+        const _p = [
+            "在此填入前半段亂碼", // 例如 "QUl6YVN5"
+            "在此填入後半段亂碼"  // 例如 "REU0NTY3"
+        ];
+        const _k = atob(_p.join('')); 
+        
+        // 3. 設定 API 網址與指令 (使用 1.5-flash 模型，速度最快)
+        const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${_k}`;
 
-            const steps = document.getElementById('guideSteps');
-            steps.innerHTML = `
-                <li class="flex items-start gap-2">
-                    <span class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-[10px] text-white">1</span>
-                    <span>複習《課本》空間向量章節 P.42-P.50</span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-[10px] text-white">2</span>
-                    <span>演練 112 學測第 7 題 (同類型題)</span>
-                </li>
-                <li class="flex items-start gap-2">
-                    <span class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-[10px] text-white">3</span>
-                    <span>查閱「共享筆記區」前三名空間向量摘要</span>
-                </li>
-            `;
-        }
+        const promptData = {
+            contents: [{
+                parts: [{
+                    text: `你現在是 P!LOT 網站的 AI 教師學長。
+                    請針對以下學生問題進行學測考點分析與解答建議：
+                    問題：${userInput}
+                    
+                    要求：
+                    - 語氣親切有鼓勵性。
+                    - 標註出該題所屬的高中章節。
+                    - 給出 3 個複習建議。`
+                }]
+            }]
+        };
+
+        // 4. 發送請求
+        const response = await fetch(URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(promptData)
+        });
+
+        if (!response.ok) throw new Error("API 連線失敗，請檢查金鑰限制。");
+
+        const data = await response.json();
+        const aiReply = data.candidates[0].content.parts[0].text;
+
+        // 5. 渲染答案
+        responseText.innerText = aiReply;
+
+    } catch (error) {
+        console.error("AI 錯誤:", error);
+        responseText.innerText = "❌ 導航系統連線失敗。原因：" + error.message;
+    }
+}
+
+          
 
         // 倒數計時
         const diff = new Date('2026-01-20') - new Date();
