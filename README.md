@@ -200,72 +200,74 @@
                 }
             });
         }
-
         // AI 診斷邏輯
         async function aiDiagnose() {
-    // 1. 基本檢查：確認輸入框不是空的
-    const userInputField = document.getElementById('aiInput');
-    const responseArea = document.getElementById('aiResponse');
-    const responseText = document.getElementById('aiText');
+            const userInputField = document.getElementById('aiInput');
+            const responseArea = document.getElementById('aiResponse');
+            const responseText = document.getElementById('aiText');
     
-    if (!userInputField.value.trim()) {
-        alert("請輸入你想詢問的題號或問題！");
-        return;
-    }
+                if (!userInputField.value.trim()) {
+                    alert("請輸入你想詢問的題號或問題！");
+                    return;
+                    }
 
-    const userInput = userInputField.value.trim();
-    responseArea.classList.remove('hidden');
-    responseText.innerText = "🤖 P!LOT 正在分析考點中...";
+        const userInput = userInputField.value.trim();
+        responseArea.classList.remove('hidden');
+        responseText.innerText = "🤖 P!LOT 正在搜尋資料並分析考點...";
 
-    try {
-        // 2. 📍 安全密鑰還原 (已修正語法錯誤)
+        try {
+        // 📍 修正點：確保使用半形引號與半形等於號
         const _p = [
-            "QUl6YVN5RHNSeUk3QTZ", // 這裡加上了引號和結尾的逗號
-            "tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr＝" // 這裡加上了引號
+            "QUl6YVN5RHNSeUk3QTZ", 
+            "tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr==" // 修正為半形 ==
         ];
+        
+        // 拼接並還原金鑰
         const _k = atob(_p.join(''));
         
-        // 3. 設定 API 網址與指令 (使用 1.5-flash 模型，速度最快)
         const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${_k}`;
 
         const promptData = {
             contents: [{
                 parts: [{
                     text: `你現在是 P!LOT 網站的 AI 教師學長。
-                    請針對以下學生問題搜尋網路上的歷屆考題與解析或是由網頁中的資料庫進行學測考點分析與解答建議：
-                    問題：${userInput}
+                    學生問題：${userInput}
                     
-                    要求：
-                    - 語氣親切有鼓勵性。
-                    - 標註出該題所屬的高中章節。
-                    - 給出 3 個複習建議。`
+                    任務：
+                    1. 檢索並分析該題在學測（歷屆考題）中的知識點。
+                    2. 若是具體題號，請解釋該題的核心邏輯。
+                    3. 語氣親切，標註章節，給出 3 個複習建議。`
                 }]
             }]
         };
 
-        // 4. 發送請求
         const response = await fetch(URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(promptData)
         });
 
-        if (!response.ok) throw new Error("API 連線失敗，請檢查金鑰限制。");
+        // 偵測是否被 Google Cloud 限制擋住 (403 錯誤)
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("API 詳細錯誤:", errorData);
+            throw new Error(errorData.error.message || "API 連線失敗");
+        }
 
         const data = await response.json();
-        const aiReply = data.candidates[0].content.parts[0].text;
-
-        // 5. 渲染答案
-        responseText.innerText = aiReply;
+        
+        if (data.candidates && data.candidates[0].content) {
+            const aiReply = data.candidates[0].content.parts[0].text;
+            responseText.innerText = aiReply;
+        } else {
+            throw new Error("AI 無法生成回應，請換個問題試試。");
+        }
 
     } catch (error) {
-        console.error("AI 錯誤:", error);
-        responseText.innerText = "❌ 導航系統連線失敗。原因：" + error.message;
+        console.error("AI 錯誤細節:", error);
+        responseText.innerText = "❌ 導航連線失敗。原因：" + error.message;
     }
 }
-
-          
-
         // 倒數計時
         const diff = new Date('2026-01-20') - new Date();
         document.getElementById('days').innerText = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
