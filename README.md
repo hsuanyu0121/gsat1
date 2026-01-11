@@ -121,12 +121,13 @@
 
         // 📍 插入你的 Firebase 配置
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+           apiKey: "AIzaSyBNmnC1QQVwBMgTgjUVLw4xXZxIrVlAV6c",
+          authDomain: "gsat1-29951.firebaseapp.com",
+          projectId: "gsat1-29951",
+          storageBucket: "gsat1-29951.firebasestorage.app",
+          messagingSenderId: "165497162624",
+          appId: "1:165497162624:web:9ed2b73dc6db035cadcf65",
+          measurementId: "G-89J4P5W7MP"
         };
 
         const app = initializeApp(firebaseConfig);
