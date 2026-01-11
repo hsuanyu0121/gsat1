@@ -200,74 +200,114 @@
                 }
             });
         }
-        // AI 診斷邏輯
-        async function aiDiagnose() {
-            const userInputField = document.getElementById('aiInput');
-            const responseArea = document.getElementById('aiResponse');
-            const responseText = document.getElementById('aiText');
+        <section id="ai-section" style="padding: 20px; max-width: 600px; margin: auto; font-family: sans-serif;">
+    <h2 style="color: #1e40af; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">🤖 P!LOT AI 考點導航員</h2>
     
-                if (!userInputField.value.trim()) {
-                    alert("請輸入你想詢問的題號或問題！");
-                    return;
-                    }
+    <div style="margin-top: 20px;">
+        <label for="aiInput" style="display: block; margin-bottom: 8px; font-weight: bold;">請輸入題號或問題：</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="aiInput" placeholder="例如：113數A-7 或 空間向量" 
+                   style="flex-grow: 1; padding: 12px; border: 2px solid #d1d5db; border-radius: 10px; outline: none; font-size: 16px;">
+            
+            <button onclick="aiDiagnose()" id="aiBtn"
+                    style="padding: 10px 24px; background: #2563eb; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s;">
+                開始分析
+            </button>
+        </div>
+    </div>
 
-        const userInput = userInputField.value.trim();
-        responseArea.classList.remove('hidden');
-        responseText.innerText = "🤖 P!LOT 正在搜尋資料並分析考點...";
+    <div id="aiResponse" style="margin-top: 25px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 15px; display: none;">
+        <p style="font-weight: bold; color: #1e40af; margin-bottom: 10px;">📍 AI 教師學長分析結果：</p>
+        <div id="aiText" style="line-height: 1.8; color: #334155; white-space: pre-wrap;"></div>
+    </div>
+</section>
+
+<script>
+    /**
+     * P!LOT AI 核心邏輯
+     * 整合了 Base64 解碼、Gemini API 連線與錯誤處理
+     */
+    async function aiDiagnose() {
+        const inputEl = document.getElementById('aiInput');
+        const responseArea = document.getElementById('aiResponse');
+        const responseText = document.getElementById('aiText');
+        const btn = document.getElementById('aiBtn');
+
+        // 1. 檢查輸入
+        const userInput = inputEl.value.trim();
+        if (!userInput) {
+            alert("請先輸入題號或想詢問的觀念喔！");
+            return;
+        }
+
+        // 2. 顯示讀取中狀態
+        btn.disabled = true;
+        btn.innerText = "分析中...";
+        responseArea.style.display = "block";
+        responseText.innerText = "⏳ P!LOT 正在查閱歷屆試題庫並思考中，請稍候...";
 
         try {
-        // 📍 修正點：確保使用半形引號與半形等於號
-        const _p = [
-            "QUl6YVN5RHNSeUk3QTZ", 
-            "tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr==" // 修正為半形 ==
-        ];
-        
-        // 拼接並還原金鑰
-        const _k = atob(_p.join(''));
-        
-        const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${_k}`;
+            // 3. API Key 還原 (Base64) 
+            // 這裡已經修正為你的正確亂碼並補上英文半形 ==
+            const _p = [
+                "QUl6YVN5RHNSeUk3QTZ", 
+                "tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr=="
+            ];
+            
+            // 使用 atob 進行解碼
+            const _k = atob(_p.join('')); 
+            
+            // 4. 設定 Gemini 1.5 Flash API
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${_k}`;
 
-        const promptData = {
-            contents: [{
-                parts: [{
-                    text: `你現在是 P!LOT 網站的 AI 教師學長。
-                    學生問題：${userInput}
-                    
-                    任務：
-                    1. 檢索並分析該題在學測（歷屆考題）中的知識點。
-                    2. 若是具體題號，請解釋該題的核心邏輯。
-                    3. 語氣親切，標註章節，給出 3 個複習建議。`
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: `你現在是 P!LOT 網站的 AI 教師學長。
+                        學生問題：${userInput}
+                        
+                        任務：
+                        1. 檢索並分析該題在高中學測中的核心知識點。
+                        2. 解釋該題的思考邏輯與常見陷阱。
+                        3. 給予 3 個具體的複習建議（包含對應章節）。
+                        
+                        要求：語氣要親切、像學長在帶領學弟妹，並使用繁體中文。`
+                    }]
                 }]
-            }]
-        };
+            };
 
-        const response = await fetch(URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(promptData)
-        });
+            // 5. 發送請求
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody)
+            });
 
-        // 偵測是否被 Google Cloud 限制擋住 (403 錯誤)
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error("API 詳細錯誤:", errorData);
-            throw new Error(errorData.error.message || "API 連線失敗");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error.message || "API 連線異常");
+            }
+
+            const data = await response.json();
+            
+            // 6. 成功取得回覆並顯示
+            if (data.candidates && data.candidates[0].content) {
+                const aiReply = data.candidates[0].content.parts[0].text;
+                responseText.innerText = aiReply;
+            } else {
+                throw new Error("AI 無法理解這個問題，請試著換種問法。");
+            }
+
+        } catch (error) {
+            console.error("DEBUG ERROR:", error);
+            responseText.innerText = "❌ 導航連線失敗。\n原因：" + error.message + "\n請確認 API 金鑰是否有效或網域是否被限制。";
+        } finally {
+            // 恢復按鈕狀態
+            btn.disabled = false;
+            btn.innerText = "開始分析";
         }
-
-        const data = await response.json();
-        
-        if (data.candidates && data.candidates[0].content) {
-            const aiReply = data.candidates[0].content.parts[0].text;
-            responseText.innerText = aiReply;
-        } else {
-            throw new Error("AI 無法生成回應，請換個問題試試。");
-        }
-
-    } catch (error) {
-        console.error("AI 錯誤細節:", error);
-        responseText.innerText = "❌ 導航連線失敗。原因：" + error.message;
     }
-}
+</script>
         // 倒數計時
         const diff = new Date('2026-01-20') - new Date();
         document.getElementById('days').innerText = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
