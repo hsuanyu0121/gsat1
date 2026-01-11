@@ -228,6 +228,9 @@
      * 整合了 Base64 解碼、Gemini API 連線與錯誤處理
      */
     async function aiDiagnose() {
+        alert("按鈕點擊成功！大腦有連上！"); // 👈 加上這一行
+    console.log("Button clicked"); 
+    //
         const inputEl = document.getElementById('aiInput');
         const responseArea = document.getElementById('aiResponse');
         const responseText = document.getElementById('aiText');
