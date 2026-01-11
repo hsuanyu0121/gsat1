@@ -221,7 +221,7 @@
         // 2. 📍 安全密鑰還原 (已修正語法錯誤)
         const _p = [
             "QUl6YVN5RHNSeUk3QTZ", // 這裡加上了引號和結尾的逗號
-            "tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr" // 這裡加上了引號
+            "tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr＝" // 這裡加上了引號
         ];
         const _k = atob(_p.join(''));
         
