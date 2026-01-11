@@ -218,12 +218,12 @@
     responseText.innerText = "🤖 P!LOT 正在分析考點中...";
 
     try {
-        // 2. 📍 安全密鑰還原 (請填入你的 Base64 亂碼)
+        // 2. 📍 安全密鑰還原 (已修正語法錯誤)
         const _p = [
-            QUl6YVN5RHNSeUk3QTZ// 例如 "QUl6YVN5"
-            tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr// 例如 "REU0NTY3"
+            "QUl6YVN5RHNSeUk3QTZ", // 這裡加上了引號和結尾的逗號
+            "tWFFNbFc2Xzk4SDBVS0YtazZwaFZWUThr" // 這裡加上了引號
         ];
-        const _k = atob(_p.join('')); 
+        const _k = atob(_p.join(''));
         
         // 3. 設定 API 網址與指令 (使用 1.5-flash 模型，速度最快)
         const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${_k}`;
