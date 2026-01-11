@@ -23,7 +23,7 @@
     </nav>
 
     <header class="gradient-header py-12 text-white text-center px-4">
-        <h2 class="text-4xl font-extrabold mb-4">陪你走完最後一里路</h2>
+        <h2 class="text-4xl font-extrabold mb-4">天道酬勤</h2>
         <p class="text-blue-50 text-lg opacity-90">串聯全台戰友，資源共享，精準偵錯</p>
     </header>
 
