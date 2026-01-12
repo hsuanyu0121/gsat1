@@ -62,14 +62,37 @@
             <h4 class="text-[10px] opacity-50 mb-3 font-bold uppercase tracking-widest text-center">Focus Session</h4>
             <div class="space-y-3 mb-4">
                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">數A</p><p id="timer-math" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-math" onclick="toggleTimer('math')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">開始</button>
+                    <div><p class="text-[10px] text-blue-300">math</p><p id="timer-math" class="text-lg font-mono font-black">00:00:00</p></div>
+                    <button id="btn-math" onclick="toggleTimer('math')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
                 </div>
                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">英文</p><p id="timer-eng" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-eng" onclick="toggleTimer('eng')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">開始</button>
+                    <div><p class="text-[10px] text-blue-300">eng</p><p id="timer-eng" class="text-lg font-mono font-black">00:00:00</p></div>
+                    <button id="btn-eng" onclick="toggleTimer('eng')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
                 </div>
+                <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
+                    <div><p class="text-[10px] text-blue-300">mandarin</p><p id="timer-mandarin" class="text-lg font-mono font-black">00:00:00</p></div>
+                    <button id="btn-math" onclick="toggleTimer('mandarin')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
             </div>
+                <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
+                    <div><p class="text-[10px] text-blue-300">phy</p><p id="timer-phy" class="text-lg font-mono font-black">00:00:00</p></div>
+                    <button id="btn-math" onclick="toggleTimer('phy')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
+            </div> 
+                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
+                    <div><p class="text-[10px] text-blue-300">chem</p><p id="timer-chem" class="text-lg font-mono font-black">00:00:00</p></div>
+                    <button id="btn-math" onclick="toggleTimer('chem')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
+                </div>
+                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
+                    <div><p class="text-[10px] text-blue-300">bio</p><p id="timer-bio" class="text-lg font-mono font-black">00:00:00</p></div>
+                    <button id="btn-math" onclick="toggleTimer('bio')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
+                </div>
+                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
+                    <div><p class="text-[10px] text-blue-300">earth science</p><p id="timer-earth science" class="text-lg font-mono font-black">00:00:00</p></div>
+                    <button id="btn-math" onclick="toggleTimer('earth science')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
+                </div>
+                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
+                    <div><p class="text-[10px] text-blue-300">society study</p><p id="timer-society study" class="text-lg font-mono font-black">00:00:00</p></div>
+                    <button id="btn-math" onclick="toggleTimer('society study')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
+                </div>
             <button onclick="openShareModal()" class="w-full py-3 bg-blue-700 rounded-xl text-[11px] font-bold hover:bg-blue-600 transition">📸 製作分享圖</button>
         </div>
 
@@ -78,7 +101,7 @@
 
     <main class="column w-2/4 bg-slate-50 border-r border-slate-200 flex flex-col">
         <div id="diagnosisView" class="w-full h-full flex flex-col">
-            <h2 class="text-2xl font-black text-slate-800 text-center mb-6 italic">🤖 AI 視覺盲區診斷</h2>
+            <h2 class="text-2xl font-black text-slate-800 text-center mb-6 italic">AI 診斷對話區</h2>
             
             <div id="aiResponse" class="hidden bg-white p-8 border border-slate-200 shadow-sm flex-1 flex flex-col">
                 <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
