@@ -145,27 +145,33 @@
     </div>
 
     <script>
-        // 1. 全域變數與初始化
+         1. 全域變數與初始化
         let base64Image = null; 
         let timers = {
             math: { seconds: 0, interval: null, running: false },
-            eng: { seconds: 0, interval: null, running: false }
+            eng: { seconds: 0, interval: null, running: false },
+            mandarin: { seconds: 0, interval: null, running: false },
+            phy: { seconds: 0, interval: null, running: false },
+            chem: { seconds: 0, interval: null, running: false },
+            bio: { seconds: 0, interval: null, running: false },
+            earth_science: { seconds: 0, interval: null, running: false },
+            society_study: { seconds: 0, interval: null, running: false },
         };
 
         const firebaseConfig = {
-            apiKey: "你的_FIREBASE_API_KEY",
-            authDomain: "你的_AUTH_DOMAIN",
-            projectId: "你的_PROJECT_ID",
-            storageBucket: "你的_STORAGE_BUCKET",
-            messagingSenderId: "你的_SENDER_ID",
-            appId: "你的_APP_ID"
-        };
+           apiKey: "AIzaSyBNmnC1QQVwBMgTgjUVLw4xXZxIrVlAV6c",
+          authDomain: "gsat1-29951.firebaseapp.com",
+          projectId: "gsat1-29951",
+          storageBucket: "gsat1-29951.firebasestorage.app",
+          messagingSenderId: "165497162624",
+          appId: "1:165497162624:web:9ed2b73dc6db035cadcf65",
+          measurementId: "G-89J4P5W7MP"
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // 2. 登入狀態監聽
+        2. 登入狀態監聽
         function signInWithGoogle() { auth.signInWithPopup(provider); }
         function signOut() { if(confirm("確定登出？")) auth.signOut(); }
 
