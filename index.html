@@ -32,13 +32,23 @@
                     Google 登入
                 </button>
             </div>
-            <div id="userInfo" class="hidden flex items-center gap-3 p-3 bg-blue-50 rounded-2xl border">
-                <img id="userAvatar" class="w-10 h-10 rounded-full" src="">
-                <div>
-                    <p id="userName" class="text-sm font-black"></p>
-                    <p class="text-[9px] text-green-600 font-bold">雲端同步中</p>
-                </div>
+            <div id="userInfo" class="hidden">
+            <div class="flex flex-col gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100 relative">
+            <div class="flex items-center gap-3">
+            <img id="userAvatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="">
+            <div class="overflow-hidden">
+                <p id="userName" class="text-sm font-black text-slate-700 truncate"></p>
+                <p class="text-[9px] text-green-600 font-bold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> 雲端同步中
+                </p>
             </div>
+        </div>
+        
+        <button onclick="signOut()" class="w-full py-1.5 bg-white border border-red-200 text-red-500 text-[11px] font-bold rounded-lg hover:bg-red-50 hover:border-red-300 transition-all active:scale-95">
+            登出 Google 帳號
+        </button>
+    </div>
+</div>
         </div>
         <canvas id="radarChart"></canvas>
     </div>
