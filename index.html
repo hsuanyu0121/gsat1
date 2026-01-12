@@ -96,7 +96,14 @@
 
     <script>
         // 1. Firebase (請填入金鑰)
-        const firebaseConfig = { apiKey: "YOUR_KEY", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..." };
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNmnC1QQVwBMgTgjUVLw4xXZxIrVlAV6c",
+            authDomain: "gsat1-29951.firebaseapp.com",
+            projectId: "gsat1-29951",
+            storageBucket: "gsat1-29951.firebasestorage.app",
+            messagingSenderId: "165497162624",
+            appId: "1:165497162624:web:9ed2b73dc6db035cadcf65",
+            measurementId: "G-89J4P5W7MP" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
