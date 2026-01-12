@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P!LOT | AI 學測學習導航系統 </title>
+    <title>P!LOT | AI 視覺導航系統</title>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -13,71 +13,92 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
-        :root { --navy: #1e3a8a; --private-red: #991b1b; }
+        :root { --navy: #1e3a8a; }
         body { background-color: #f8fafc; height: 100vh; overflow: hidden; display: flex; font-family: sans-serif; }
         .column { height: 100vh; overflow-y: auto; padding: 24px; border-right: 1px solid #e2e8f0; }
-        .navy-btn { background-color: var(--navy); color: white; transition: 0.3s; font-weight: bold; border-radius: 12px; cursor: pointer; }
+        .navy-btn { background-color: var(--navy); color: white; transition: 0.3s; font-weight: bold; border-radius: 12px; cursor: pointer; text-align: center; }
         .folder-item { background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
         .folder-item:hover { border-color: var(--navy); transform: scale(1.02); }
-        .blind-spot-card { background: #fff5f5; border-left: 4px solid #f87171; padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .hidden { display: none !important; }
+        
+        /* 中央區域佈局優化 */
+        #diagnosisView { display: flex; flex-direction: column; height: 100%; }
+        #aiResponse { flex-grow: 1; margin-bottom: 20px; display: flex; flex-direction: column; }
+        #aiText { flex-grow: 1; overflow-y: auto; }
+
+        /* 相機預覽 */
+        #webcam-container { position: relative; aspect-ratio: 1/1; background: #000; border-radius: 20px; overflow: hidden; }
+        #webcam { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 <body class="flex">
 
     <div class="column w-1/4 bg-white shadow-xl z-20">
-        <h1 class="text-3xl font-black text-blue-900 italic mb-8">P!LOT</h1>
-        <div id="authSection" class="mb-8">
+        <h1 class="text-3xl font-black text-blue-900 italic mb-8 tracking-tighter">P!LOT</h1>
+        
+        <div id="authSection" class="mb-6">
             <div id="loginGroup">
-                <button onclick="signInWithGoogle()" class="w-full py-3 border-2 border-blue-900 text-blue-900 rounded-xl font-bold flex items-center justify-center gap-2">
-                    Google 登入
+                <button onclick="signInWithGoogle()" class="w-full py-3 border-2 border-blue-900 text-blue-900 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-95 transition">
+                    Google 帳號登入
                 </button>
             </div>
             <div id="userInfo" class="hidden">
-            <div class="flex flex-col gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100 relative">
-            <div class="flex items-center gap-3">
-            <img id="userAvatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="">
-            <div class="overflow-hidden">
-                <p id="userName" class="text-sm font-black text-slate-700 truncate"></p>
-                <p class="text-[9px] text-green-600 font-bold flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> 雲端同步中
-                </p>
+                <div class="flex flex-col gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                    <div class="flex items-center gap-3">
+                        <img id="userAvatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="">
+                        <div class="overflow-hidden">
+                            <p id="userName" class="text-sm font-black text-slate-700 truncate"></p>
+                            <p class="text-[9px] text-green-600 font-bold italic">● 雲端同步已開啟</p>
+                        </div>
+                    </div>
+                    <button onclick="signOut()" class="w-full py-1.5 bg-white border border-red-200 text-red-500 text-[10px] font-bold rounded-lg hover:bg-red-50 transition">登出帳號</button>
+                </div>
             </div>
         </div>
-        
-        <button onclick="signOut()" class="w-full py-1.5 bg-white border border-red-200 text-red-500 text-[11px] font-bold rounded-lg hover:bg-red-50 hover:border-red-300 transition-all active:scale-95">
-            登出 Google 帳號
-        </button>
-    </div>
-</div>
+
+        <div class="mb-6 p-4 bg-slate-900 text-white rounded-2xl shadow-lg">
+            <h4 class="text-[10px] opacity-50 mb-3 font-bold uppercase tracking-widest">Focus Session</h4>
+            <div class="grid grid-cols-2 gap-3 text-center">
+                <div><p class="text-[10px] font-bold text-blue-300">數A</p><p id="timer-math" class="text-lg font-mono font-black">00:00:00</p></div>
+                <div><p class="text-[10px] font-bold text-blue-300">英文</p><p id="timer-eng" class="text-lg font-mono font-black">00:00:00</p></div>
+            </div>
+            <button onclick="openShareModal()" class="w-full mt-4 py-3 bg-blue-600 rounded-xl text-[11px] font-bold hover:bg-blue-500 transition shadow-lg">📸 製作打卡分享圖</button>
         </div>
         <canvas id="radarChart"></canvas>
     </div>
 
-    <div class="column w-2/4 bg-slate-50">
-        <div id="diagnosisView" class="max-w-3xl mx-auto">
-            <h2 class="text-2xl font-black text-center mb-6">🤖 AI 盲區診斷</h2>
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border mb-6">
-                <textarea id="aiInput" rows="5" class="w-full text-lg outline-none" placeholder="請輸入題目、疑問或使用下方相機拍攝..."></textarea>
-                <div id="previewContainer" class="hidden mb-4"><img id="imgPreview" class="max-h-40 mx-auto rounded-lg"></div>
-                <div class="flex justify-between items-center border-t pt-4">
-                    <button onclick="document.getElementById('fileInput').click()" class="font-bold text-navy">📷 拍攝題目</button>
-                    <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="handleImage(this)">
-                    <button id="aiBtn" class="navy-btn px-12 py-3">開始深度分析</button>
+    <div class="column w-2/4 bg-slate-50 border-r border-slate-200 flex flex-col">
+        <div id="diagnosisView" class="w-full h-full flex flex-col">
+            <h2 class="text-2xl font-black text-slate-800 text-center mb-6 italic">🤖 AI 視覺盲區診斷</h2>
+            
+            <div id="aiResponse" class="hidden bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm mb-6 flex-1 overflow-hidden">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                    <span class="text-xs font-black text-blue-900 uppercase tracking-widest">Diagnostic Report</span>
+                    <button onclick="document.getElementById('aiResponse').classList.add('hidden')" class="text-slate-300 hover:text-slate-500">清除結果</button>
                 </div>
+                <div id="aiText" class="text-slate-600 leading-relaxed text-lg whitespace-pre-wrap pr-2"></div>
             </div>
-            <div id="aiResponse" class="hidden bg-white p-8 rounded-[2rem] border shadow-md">
-                <div id="aiText" class="text-slate-600 leading-relaxed text-lg whitespace-pre-wrap"></div>
+
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
+                <textarea id="aiInput" rows="3" class="w-full text-lg border-none outline-none resize-none font-medium" placeholder="輸入題目或拍攝圖片..."></textarea>
+                <div id="previewContainer" class="hidden mb-4 relative text-center">
+                    <img id="imgPreview" class="max-h-32 rounded-xl border mx-auto" src="">
+                    <button onclick="clearImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6">×</button>
+                </div>
+                <div class="flex justify-between items-center mt-2 border-t pt-4">
+                    <button onclick="document.getElementById('fileInput').click()" class="text-navy font-bold flex items-center gap-2">📷 拍攝/上傳</button>
+                    <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="handleImage(this)">
+                    <button id="aiBtn" class="navy-btn px-10 py-3 shadow-lg">開始診斷</button>
+                </div>
             </div>
         </div>
 
-        <div id="folderView" class="hidden max-w-3xl mx-auto">
+        <div id="folderView" class="hidden w-full h-full">
             <div class="flex items-center gap-4 mb-8">
-                <button onclick="closeFolder()" class="font-bold">← 返回</button>
-                <h2 id="currentFolderName" class="text-2xl font-black">資料夾</h2>
+                <button onclick="closeFolder()" class="p-2 hover:bg-slate-200 rounded-full font-bold text-navy">← 返回</button>
+                <h2 id="currentFolderName" class="text-2xl font-black italic">資料夾</h2>
             </div>
-            <div id="folderContentList" class="p-10 border-2 border-dashed rounded-3xl text-center text-slate-300">
-                目前此空間尚未存入錯題，完成診斷後點擊「存入資料庫」即可在此查看並分析盲區。
-            </div>
+            <div id="folderContentList" class="p-20 text-center text-slate-300 italic border-2 border-dashed rounded-[2rem]">此空間目前尚未存入錯題。</div>
         </div>
     </div>
 
@@ -85,145 +106,155 @@
         <div class="space-y-8">
             <section>
                 <h4 class="text-sm font-black text-red-800 mb-4 italic">🔒 個人錯題資料庫</h4>
-                <div class="space-y-3">
-                    <div onclick="openFolder('我的專屬錯題本', 'private')" class="folder-item border-l-4 border-l-red-500">
-                        <span class="text-xl">📓</span>
-                        <div class="flex-1 text-xs font-bold text-slate-700">我的個人錯題集</div>
-                        <span class="text-slate-300">→</span>
-                    </div>
+                <div onclick="openFolder('我的專屬錯題本', 'private')" class="folder-item border-l-4 border-l-red-500">
+                    <span class="text-xl">📓</span>
+                    <div class="flex-1 text-xs font-bold text-slate-700">我的個人錯題集</div>
                 </div>
             </section>
-            
             <section>
                 <h4 class="text-sm font-black text-blue-900 mb-4 italic">🌐 公開分享資源</h4>
                 <div onclick="openFolder('113學測數學', 'public')" class="folder-item">
-                    <span class="text-xl">📁</span>
-                    <div class="flex-1 text-xs font-bold">113 學測數學重點</div>
+                    <span class="text-xl">📁</span><div class="flex-1 text-xs font-bold">113 學測數學重點</div>
                 </div>
             </section>
         </div>
     </div>
 
+    <div id="shareModal" class="hidden fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] overflow-hidden max-w-md w-full relative">
+            <div id="webcam-container">
+                <video id="webcam" autoplay playsinline></video>
+                <div id="strava-overlay" class="absolute bottom-6 left-6 text-white drop-shadow-2xl cursor-pointer" onclick="toggleOverlayPos()">
+                    <h3 class="text-4xl font-black italic tracking-tighter text-blue-900" style="text-shadow: 2px 2px 0px white;">P!LOT</h3>
+                    <p id="ov-date" class="text-[12px] font-bold mt-1"></p>
+                    <p id="ov-stats" class="text-[12px] font-bold"></p>
+                </div>
+            </div>
+            <canvas id="shareCanvas" class="hidden"></canvas>
+            <div class="p-6 grid grid-cols-2 gap-4">
+                <button onclick="takeSnap()" class="py-4 bg-slate-900 text-white rounded-2xl font-bold">📸 拍照合成</button>
+                <button onclick="closeShareModal()" class="py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold">取消</button>
+            </div>
+            <a id="downloadLink" class="hidden"></a>
+        </div>
+    </div>
+
     <script>
-        // 1. Firebase (請填入金鑰)
-        const firebaseConfig = {
-            apiKey: "AIzaSyBNmnC1QQVwBMgTgjUVLw4xXZxIrVlAV6c",
-            authDomain: "gsat1-29951.firebaseapp.com",
-            projectId: "gsat1-29951",
-            storageBucket: "gsat1-29951.firebasestorage.app",
-            messagingSenderId: "165497162624",
-            appId: "1:165497162624:web:9ed2b73dc6db035cadcf65",
-            measurementId: "G-89J4P5W7MP" };
+        const firebaseConfig = { apiKey: "你的_KEY", authDomain: "...", projectId: "...", storageBucket: "...", messagingSenderId: "...", appId: "..." };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const provider = new firebase.auth.GoogleAuthProvider();
+
         function signInWithGoogle() { auth.signInWithPopup(provider); }
+        function signOut() { if(confirm("確定登出嗎？")) auth.signOut(); }
+
         auth.onAuthStateChanged(user => {
+            const lg = document.getElementById('loginGroup');
+            const ui = document.getElementById('userInfo');
             if (user) {
-                document.getElementById('loginGroup').classList.add('hidden');
-                document.getElementById('userInfo').classList.remove('hidden');
+                lg.classList.add('hidden'); ui.classList.remove('hidden');
                 document.getElementById('userName').innerText = user.displayName;
                 document.getElementById('userAvatar').src = user.photoURL;
+                startTimer();
+            } else {
+                lg.classList.remove('hidden'); ui.classList.add('hidden');
             }
         });
 
-        // 2. 空間切換
-        function openFolder(name, type) {
+        let time = { math: 0, eng: 0 };
+        function startTimer() {
+            setInterval(() => {
+                time.math++; time.eng++;
+                const fmt = s => new Date(s * 1000).toISOString().substr(11, 8);
+                document.getElementById('timer-math').innerText = fmt(time.math);
+                document.getElementById('timer-eng').innerText = fmt(time.eng);
+            }, 1000);
+        }
+
+        async function openShareModal() {
+            document.getElementById('shareModal').classList.remove('hidden');
+            document.getElementById('ov-date').innerText = new Date().toLocaleDateString();
+            document.getElementById('ov-stats').innerText = `數A: ${document.getElementById('timer-math').innerText} | 英文: ${document.getElementById('timer-eng').innerText}`;
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            document.getElementById('webcam').srcObject = stream;
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.add('hidden');
+            const stream = document.getElementById('webcam').srcObject;
+            if(stream) stream.getTracks().forEach(t => t.stop());
+        }
+
+        function toggleOverlayPos() {
+            const ov = document.getElementById('strava-overlay');
+            ov.classList.toggle('bottom-6'); ov.classList.toggle('top-6');
+        }
+
+        function takeSnap() {
+            const v = document.getElementById('webcam');
+            const c = document.getElementById('shareCanvas');
+            c.width = v.videoWidth; c.height = v.videoHeight;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(v, 0, 0);
+            ctx.fillStyle = "#1e3a8a"; ctx.font = "bold 60px sans-serif";
+            ctx.fillText("P!LOT", 50, c.height - 120);
+            ctx.fillStyle = "white"; ctx.font = "30px sans-serif";
+            ctx.fillText(document.getElementById('ov-date').innerText, 50, c.height - 70);
+            ctx.fillText(document.getElementById('ov-stats').innerText, 50, c.height - 30);
+            const link = document.getElementById('downloadLink');
+            link.href = c.toDataURL(); link.download = "PILOT_SHARE.png";
+            link.click();
+        }
+
+        let base64 = null;
+        function handleImage(i) {
+            const reader = new FileReader();
+            reader.onload = e => { 
+                document.getElementById('imgPreview').src = e.target.result;
+                document.getElementById('previewContainer').classList.remove('hidden');
+                base64 = e.target.result.split(',')[1];
+            };
+            reader.readAsDataURL(i.files[0]);
+        }
+        function clearImage() { document.getElementById('previewContainer').classList.add('hidden'); base64 = null; }
+
+        document.getElementById('aiBtn').addEventListener('click', async function() {
+            const txt = document.getElementById('aiInput').value;
+            if(!txt && !base64) return;
+            this.innerText = "🔍 分析中...";
+            document.getElementById('aiResponse').classList.remove('hidden');
+            document.getElementById('aiText').innerText = "AI 正在分析學習盲區與解題邏輯...";
+            try {
+                const k = "AIzaSyDsRyI7A6" + "mXQMlW6_98H0UKF-k6phVVU8k";
+                const parts = [{ text: "請分析此題並指出：1.詳解($公式) 2.核心考點 3.盲區診斷建議。" }];
+                if (txt) parts.push({ text: txt });
+                if (base64) parts.push({ inline_data: { mime_type: "image/jpeg", data: base64 } });
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts }] })
+                });
+                const d = await res.json();
+                document.getElementById('aiText').innerText = d.candidates[0].content.parts[0].text;
+                if (window.MathJax) MathJax.typesetPromise();
+            } catch (e) { document.getElementById('aiText').innerText = "連線失敗"; }
+            this.innerText = "開始診斷";
+        });
+
+        function openFolder(n, t) {
             document.getElementById('diagnosisView').classList.add('hidden');
             document.getElementById('folderView').classList.remove('hidden');
-            document.getElementById('currentFolderName').innerText = name;
+            document.getElementById('currentFolderName').innerText = n;
         }
         function closeFolder() {
             document.getElementById('folderView').classList.add('hidden');
             document.getElementById('diagnosisView').classList.remove('hidden');
         }
 
-        // 3. AI 盲區診斷邏輯
-        let imgBase64 = null;
-        function handleImage(i) {
-            const f = i.files[0];
-            const r = new FileReader();
-            r.onload = e => {
-                document.getElementById('imgPreview').src = e.target.result;
-                document.getElementById('previewContainer').classList.remove('hidden');
-                imgBase64 = e.target.result.split(',')[1];
-            };
-            r.readAsDataURL(f);
-        }
-
-        document.getElementById('aiBtn').addEventListener('click', async function() {
-            const txt = document.getElementById('aiInput').value;
-            if (!txt && !imgBase64) return;
-            
-            this.innerText = "🔍 正在掃描盲區...";
-            document.getElementById('aiResponse').classList.remove('hidden');
-            document.getElementById('aiText').innerText = "📡 系統正連接至 AI 導航員，分析題目與潛在知識漏洞...";
-
-            try {
-                const k = "AIzaSyDsRyI7A6" + "mXQMlW6_98H0UKF-k6phVVU8k";
-                // 強制 AI 分析盲區的 Prompt 指令
-                const parts = [{ text: "請針對此題目進行：1.步驟詳解(用$包圍公式) 2.核心章節 3.盲區診斷(分析學生可能的錯誤原因並給予建議)。" }];
-                if (txt) parts.push({ text: txt });
-                if (imgBase64) parts.push({ inline_data: { mime_type: "image/jpeg", data: imgBase64 } });
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts }] })
-                });
-                const data = await response.json();
-                document.getElementById('aiText').innerText = data.candidates[0].content.parts[0].text;
-                if (window.MathJax) MathJax.typesetPromise();
-            } catch (e) { document.getElementById('aiText').innerText = "診斷失敗：" + e.message; }
-            finally { this.innerText = "開始深度分析"; }
-        });
-
         new Chart(document.getElementById('radarChart'), {
             type: 'radar',
             data: { labels: ['數A', '英文', '自然', '國文', '社會'], datasets: [{ data: [85, 40, 95, 60, 30], borderColor: '#1e3a8a', backgroundColor: 'rgba(30,58,138,0.1)' }] },
             options: { plugins: { legend: { display: false } } }
         });
-        <div class="mt-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-    <h4 class="text-[10px] font-black text-slate-400 mb-3 uppercase tracking-widest">Focus Timer</h4>
-    <div class="grid grid-cols-2 gap-2 mb-4">
-        <div class="bg-white p-2 rounded-lg border text-center">
-            <p class="text-[9px] font-bold text-blue-900">數A</p>
-            <p id="timer-math" class="text-xs font-mono font-bold">00:00:00</p>
-        </div>
-        <div class="bg-white p-2 rounded-lg border text-center">
-            <p class="text-[9px] font-bold text-blue-900">英文</p>
-            <p id="timer-eng" class="text-xs font-mono font-bold">00:00:00</p>
-        </div>
-    </div>
-    <button onclick="openShareModal()" class="w-full py-3 navy-btn text-xs flex items-center justify-center gap-2 shadow-lg">
-        📷 製作分享卡片 (Strava Style)
-    </button>
-</div>
-
-<div id="shareModal" class="hidden fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl overflow-hidden max-w-lg w-full relative">
-        <div class="p-4 border-b flex justify-between items-center">
-            <span class="font-black text-blue-900 italic">P!LOT SHARE</span>
-            <button onclick="closeShareModal()" class="text-slate-400 text-xl">×</button>
-        </div>
-        
-        <div class="relative bg-slate-200 aspect-square">
-            <video id="webcam" autoplay playsinline class="w-full h-full object-cover"></video>
-            <canvas id="shareCanvas" class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
-            
-            <div id="overlay-text" class="absolute bottom-6 left-6 text-white drop-shadow-lg cursor-move select-none p-2 active:scale-95 transition-transform" style="touch-action: none;">
-                <h2 class="text-3xl font-black italic">P!LOT</h2>
-                <p id="overlay-date" class="text-[10px] font-bold opacity-90"></p>
-                <p id="overlay-stats" class="text-[10px] font-bold"></p>
-                <p id="overlay-streak" class="text-[10px] font-bold text-yellow-400">🔥 連續打卡 7 天</p>
-            </div>
-        </div>
-
-        <div class="p-6 grid grid-cols-2 gap-4">
-            <button onclick="takeSnap()" class="py-3 bg-slate-900 text-white rounded-xl font-bold text-sm">📸 拍照合成</button>
-            <button id="downloadBtn" class="py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hidden">💾 下載圖片</button>
-        </div>
-    </div>
-</div>
     </script>
 </body>
 </html>
