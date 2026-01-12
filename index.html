@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P!LOT | AI 視覺導航系統</title>
+    <title>P!LOT | 8科全能導航</title>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -15,192 +15,230 @@
 
     <style>
         :root { --navy: #1e3a8a; }
-        body { background-color: #f8fafc; height: 100vh; overflow: hidden; display: flex; font-family: "Microsoft JhengHei", sans-serif; }
-        .column { height: 100vh; overflow-y: auto; padding: 24px; border-right: 1px solid #e2e8f0; }
-        .navy-btn { background-color: var(--navy); color: white; transition: 0.3s; font-weight: bold; border-radius: 12px; cursor: pointer; text-align: center; }
-        .navy-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .folder-item { background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
-        .folder-item:hover { border-color: var(--navy); transform: scale(1.02); }
+        body { background-color: #f8fafc; height: 100vh; overflow: hidden; display: flex; font-family: sans-serif; }
+        .column { height: 100vh; overflow-y: auto; padding: 20px; border-right: 1px solid #e2e8f0; }
+        .timer-card { background: #1e293b; border: 1px solid #334155; padding: 10px; border-radius: 12px; text-align: center; transition: 0.3s; }
+        .timer-card.active { border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
         .hidden { display: none !important; }
-        
-        /* 中央區域佈局 */
-        #diagnosisView { display: flex; flex-direction: column; height: 100%; }
-        #aiResponse { flex-grow: 1; margin-bottom: 20px; display: flex; flex-direction: column; overflow: hidden; border-radius: 2rem; }
-        #aiText { flex-grow: 1; overflow-y: auto; padding-right: 10px; }
-
-        /* 相機預覽 */
-        #webcam-container { position: relative; aspect-ratio: 1/1; background: #000; border-radius: 20px; overflow: hidden; }
-        #webcam { width: 100%; height: 100%; object-fit: cover; }
+        .card-btn { background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 15px; cursor: pointer; transition: 0.2s; }
+        .card-btn:hover { border-color: var(--navy); transform: translateY(-2px); }
     </style>
 </head>
 <body class="flex">
 
-    <aside class="column w-1/4 bg-white shadow-xl z-20">
-        <h1 class="text-3xl font-black text-blue-900 italic mb-8 tracking-tighter text-center">P!LOT</h1>
+    <aside class="column w-1/3 bg-white shadow-xl z-20">
+        <h1 class="text-3xl font-black text-blue-900 italic mb-6 text-center">P!LOT</h1>
         
         <div id="authSection" class="mb-6">
             <div id="loginGroup">
-                <button onclick="signInWithGoogle()" class="w-full py-3 border-2 border-blue-900 text-blue-900 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-900 hover:text-white transition active:scale-95">
-                    Google 帳號登入
-                </button>
+                <button onclick="signInWithGoogle()" class="w-full py-3 border-2 border-blue-900 text-blue-900 rounded-xl font-bold hover:bg-blue-900 hover:text-white transition">Google 登入</button>
             </div>
-            <div id="userInfo" class="hidden">
-                <div class="flex flex-col gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                    <div class="flex items-center gap-3">
-                        <img id="userAvatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="">
-                        <div class="overflow-hidden">
-                            <p id="userName" class="text-sm font-black text-slate-700 truncate"></p>
-                            <p class="text-[9px] text-green-600 font-bold italic tracking-wider">● 雲端同步中</p>
-                        </div>
-                    </div>
-                    <button onclick="signOut()" class="w-full py-2 bg-white border border-red-200 text-red-500 text-[10px] font-bold rounded-lg hover:bg-red-50 transition">登出系統</button>
+            <div id="userInfo" class="hidden flex flex-col gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <div class="flex items-center gap-3">
+                    <img id="userAvatar" class="w-8 h-8 rounded-full border border-white" src="">
+                    <p id="userName" class="text-xs font-black text-slate-700 truncate"></p>
                 </div>
+                <button onclick="signOut()" class="text-[10px] text-red-500 font-bold text-left hover:underline">登出系統</button>
             </div>
         </div>
 
-        <div class="mb-6 p-4 bg-slate-900 text-white rounded-2xl shadow-lg">
-            <h4 class="text-[10px] opacity-50 mb-3 font-bold uppercase tracking-widest text-center">Focus Session</h4>
-            <div class="space-y-3 mb-4">
-                <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">math</p><p id="timer-math" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-math" onclick="toggleTimer('math')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
-                </div>
-                <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">eng</p><p id="timer-eng" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-eng" onclick="toggleTimer('eng')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
-                </div>
-                <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">mandarin</p><p id="timer-mandarin" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-math" onclick="toggleTimer('mandarin')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
+        <div class="p-4 bg-slate-900 rounded-2xl shadow-lg">
+            <h4 class="text-[10px] text-slate-400 font-bold mb-4 uppercase tracking-widest text-center">Focus Grid (8 Subjects)</h4>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <script>
+                    const subjects = [
+                        { id: 'math', name: '數學' }, { id: 'eng', name: '英文' },
+                        { id: 'man', name: '國文' }, { id: 'phy', name: '物理' },
+                        { id: 'che', name: '化學' }, { id: 'bio', name: '生物' },
+                        { id: 'ear', name: '地科' }, { id: 'soc', name: '社會' }
+                    ];
+                    subjects.forEach(s => {
+                        document.write(`
+                            <div id="card-${s.id}" class="timer-card">
+                                <p class="text-[9px] text-blue-400 font-bold">${s.name}</p>
+                                <p id="timer-${s.id}" class="text-sm font-mono font-bold text-white my-1">00:00:00</p>
+                                <button id="btn-${s.id}" onclick="toggleTimer('${s.id}')" class="w-full py-1 bg-blue-600 rounded-md text-[9px] font-bold">開始</button>
+                            </div>
+                        `);
+                    });
+                </script>
             </div>
-                <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">phy</p><p id="timer-phy" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-math" onclick="toggleTimer('phy')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
-            </div> 
-                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">chem</p><p id="timer-chem" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-math" onclick="toggleTimer('chem')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
-                </div>
-                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">bio</p><p id="timer-bio" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-math" onclick="toggleTimer('bio')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
-                </div>
-                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">earth science</p><p id="timer-earth science" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-math" onclick="toggleTimer('earth science')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
-                </div>
-                 <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
-                    <div><p class="text-[10px] text-blue-300">society study</p><p id="timer-society study" class="text-lg font-mono font-black">00:00:00</p></div>
-                    <button id="btn-math" onclick="toggleTimer('society study')" class="px-3 py-1.5 bg-blue-600 rounded-lg text-[10px] font-bold">start</button>
-                </div>
-            <button onclick="openShareModal()" class="w-full py-3 bg-blue-700 rounded-xl text-[11px] font-bold hover:bg-blue-600 transition">📸 製作分享圖</button>
+            <button onclick="openShareModal()" class="w-full py-3 bg-slate-700 text-white rounded-xl text-[10px] font-bold hover:bg-slate-600 transition">📸 製作 8科數據卡</button>
         </div>
-
-        <canvas id="radarChart"></canvas>
     </aside>
 
-    <main class="column w-2/4 bg-slate-50 border-r border-slate-200 flex flex-col">
-        <div id="diagnosisView" class="w-full h-full flex flex-col">
-            <h2 class="text-2xl font-black text-slate-800 text-center mb-6 italic">AI 診斷對話區</h2>
-            
-            <div id="aiResponse" class="hidden bg-white p-8 border border-slate-200 shadow-sm flex-1 flex flex-col">
-                <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
-                    <span class="text-xs font-black text-blue-900 uppercase tracking-widest">Diagnostic Report</span>
-                    <button onclick="document.getElementById('aiResponse').classList.add('hidden')" class="text-slate-300 text-xs font-bold">清除結果</button>
-                </div>
-                <div id="aiText" class="text-slate-600 leading-relaxed text-lg whitespace-pre-wrap"></div>
-            </div>
-
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
-                <textarea id="aiInput" rows="3" class="w-full text-lg border-none outline-none resize-none font-medium" placeholder="輸入題目或拍攝圖片..."></textarea>
-                <div id="previewContainer" class="hidden mb-4 relative text-center">
-                    <img id="imgPreview" class="max-h-32 rounded-xl border mx-auto" src="">
-                    <button onclick="clearImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6">×</button>
-                </div>
-                <div class="flex justify-between items-center mt-2 border-t pt-4">
-                    <button onclick="document.getElementById('fileInput').click()" class="text-navy font-bold flex items-center gap-2">📷 拍攝/上傳</button>
-                    <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="handleImage(this)">
-                    <button id="aiBtn" class="navy-btn px-12 py-3 shadow-xl">開始深度診斷</button>
-                </div>
-            </div>
+    <main class="column w-2/5 bg-slate-50 border-r border-slate-200 flex flex-col">
+        <h2 class="text-2xl font-black text-slate-800 text-center mb-6 italic">🤖 AI 視覺盲區診斷</h2>
+        <div id="aiResponse" class="hidden bg-white p-6 border border-slate-200 shadow-sm mb-6 flex-1 flex flex-col">
+            <div id="aiText" class="text-slate-600 leading-relaxed text-base whitespace-pre-wrap overflow-y-auto"></div>
         </div>
-
-        <div id="folderView" class="hidden w-full h-full">
-            <button onclick="closeFolder()" class="mb-4 font-bold text-navy">← 返回診斷</button>
-            <h2 id="currentFolderName" class="text-2xl font-black">資料夾內容</h2>
-            <div id="folderContentList" class="p-10 border-2 border-dashed rounded-[2rem] text-center text-slate-300">目前為空</div>
+        <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200">
+            <textarea id="aiInput" rows="2" class="w-full text-base border-none outline-none resize-none" placeholder="輸入題目或拍照..."></textarea>
+            <div id="previewContainer" class="hidden mb-2 text-center relative"><img id="imgPreview" class="max-h-24 rounded-lg mx-auto"></div>
+            <div class="flex justify-between items-center mt-2 border-t pt-3">
+                <button onclick="document.getElementById('fileInput').click()" class="text-navy font-bold text-sm">📷 拍照</button>
+                <input type="file" id="fileInput" class="hidden" accept="image/*" onchange="handleImage(this)">
+                <button id="aiBtn" class="bg-blue-900 text-white px-8 py-2 rounded-xl font-bold text-sm shadow-lg">開始診斷</button>
+            </div>
         </div>
     </main>
 
     <nav class="column w-1/4 bg-white">
-        <div class="space-y-8">
-            <section>
-                <h4 class="text-sm font-black text-red-800 mb-4 italic">🔒 個人錯題資料庫</h4>
-                <div onclick="openFolder('我的專屬錯題本')" class="folder-item border-l-4 border-l-red-500 shadow-sm">
-                    <span class="text-xl">📓</span>
-                    <div class="flex-1 text-xs font-bold text-slate-700">我的個人錯題集</div>
+        <div class="space-y-6">
+            <section class="p-4 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner">
+                <h4 class="text-sm font-black text-blue-900 mb-2 italic text-center">📊 8科能力圖</h4>
+                <div class="w-full aspect-square">
+                    <canvas id="radarChart"></canvas>
                 </div>
             </section>
-            <section>
-                <h4 class="text-sm font-black text-slate-400 mb-4 italic">📖 最近診斷紀錄</h4>
-                <div id="historyList" class="space-y-2 text-[10px] text-slate-400 italic">尚無歷史紀錄</div>
+
+            <section class="space-y-3">
+                <h4 class="text-sm font-black text-slate-800 italic">📚 導航選單</h4>
+                <div onclick="alert('載入 108-114 考古題...')" class="card-btn flex items-center gap-3">
+                    <span class="text-xl">📝</span>
+                    <div><p class="text-xs font-black">考古題資料庫</p></div>
+                </div>
+                <div onclick="openFolder('我的錯題集')" class="card-btn flex items-center gap-3">
+                    <span class="text-xl">📓</span>
+                    <div><p class="text-xs font-black">個人錯題本</p></div>
+                </div>
             </section>
         </div>
     </nav>
 
     <div id="shareModal" class="hidden fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-[2.5rem] overflow-hidden max-w-md w-full relative">
-            <div id="webcam-container">
-                <video id="webcam" autoplay playsinline></video>
-                <div id="strava-overlay" class="absolute bottom-6 left-6 text-white drop-shadow-2xl cursor-pointer" onclick="toggleOverlayPos()">
-                    <h3 class="text-4xl font-black italic text-blue-900" style="text-shadow: 2px 2px 0px white;">P!LOT</h3>
-                    <p id="ov-date" class="text-[12px] font-bold mt-1"></p>
-                    <p id="ov-stats" class="text-[12px] font-bold"></p>
-                </div>
-            </div>
-            <div class="p-6 grid grid-cols-2 gap-4">
-                <button onclick="takeSnap()" class="py-4 bg-slate-900 text-white rounded-2xl font-bold">📸 拍照合成</button>
-                <button onclick="closeShareModal()" class="py-4 bg-slate-100 rounded-2xl font-bold">取消</button>
+        <div class="bg-white rounded-[2rem] overflow-hidden max-w-sm w-full">
+            <video id="webcam" autoplay playsinline class="w-full aspect-square object-cover"></video>
+            <div class="p-4 grid grid-cols-2 gap-3">
+                <button onclick="takeSnap()" class="py-3 bg-slate-900 text-white rounded-xl font-bold text-xs">📸 拍照儲存</button>
+                <button onclick="closeShareModal()" class="py-3 bg-slate-100 rounded-xl font-bold text-xs">取消</button>
             </div>
             <canvas id="shareCanvas" class="hidden"></canvas>
-            <a id="downloadLink" class="hidden"></a>
         </div>
     </div>
 
     <script>
-         1. 全域變數與初始化
-        let base64Image = null; 
+        // 1. 初始化 8 科數據
+        let base64Image = null;
         let timers = {
-            math: { seconds: 0, interval: null, running: false },
-            eng: { seconds: 0, interval: null, running: false },
-            mandarin: { seconds: 0, interval: null, running: false },
-            phy: { seconds: 0, interval: null, running: false },
-            chem: { seconds: 0, interval: null, running: false },
-            bio: { seconds: 0, interval: null, running: false },
-            earth_science: { seconds: 0, interval: null, running: false },
-            society_study: { seconds: 0, interval: null, running: false },
+            math: { s: 0, iv: null, run: false }, eng: { s: 0, iv: null, run: false },
+            man: { s: 0, iv: null, run: false }, phy: { s: 0, iv: null, run: false },
+            che: { s: 0, iv: null, run: false }, bio: { s: 0, iv: null, run: false },
+            ear: { s: 0, iv: null, run: false }, soc: { s: 0, iv: null, run: false }
         };
 
-        const firebaseConfig = {
-           apiKey: "AIzaSyBNmnC1QQVwBMgTgjUVLw4xXZxIrVlAV6c",
-          authDomain: "gsat1-29951.firebaseapp.com",
-          projectId: "gsat1-29951",
-          storageBucket: "gsat1-29951.firebasestorage.app",
-          messagingSenderId: "165497162624",
-          appId: "1:165497162624:web:9ed2b73dc6db035cadcf65",
-          measurementId: "G-89J4P5W7MP"
+        // 2. Firebase & Auth (請填入金鑰)
+        const firebaseConfig = { apiKey: "AIzaSyBNmnC1QQVwBMgTgjUVLw4xXZxIrVlAV6c",
+                                authDomain: "gsat1-29951.firebaseapp.com",
+                                projectId: "gsat1-29951",
+                                storageBucket: "gsat1-29951.firebasestorage.app",
+                                messagingSenderId: "165497162624",
+                                appId: "1:165497162624:web:9ed2b73dc6db035cadcf65",
+                                measurementId: "G-89J4P5W7MP" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const provider = new firebase.auth.GoogleAuthProvider();
 
-        2. 登入狀態監聽
-        function signInWithGoogle() { auth.signInWithPopup(provider); }
-        function signOut() { if(confirm("確定登出？")) auth.signOut(); }
-
+        function signInWithGoogle() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        function signOut() { auth.signOut(); }
         auth.onAuthStateChanged(user => {
             const lg = document.getElementById('loginGroup');
             const ui = document.getElementById('userInfo');
             if (user) {
                 lg.classList.add('hidden'); ui.classList.remove('hidden');
-                document
+                document.getElementById('userName').innerText = user.displayName;
+                document.getElementById('userAvatar').src = user.photoURL;
+            } else {
+                lg.classList.remove('hidden'); ui.classList.add('hidden');
+                Object.keys(timers).forEach(k => stopTimer(k));
+            }
+        });
+
+        // 3. 雷達圖初始化 (8軸)
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        const radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['數', '英', '國', '物', '化', '生', '地', '社'],
+                datasets: [{
+                    data: [0, 0, 0, 0, 0, 0, 0, 0],
+                    borderColor: '#1e3a8a', backgroundColor: 'rgba(30,58,138,0.1)', pointRadius: 2
+                }]
+            },
+            options: { scales: { r: { min: 0, suggestedMax: 10, ticks: { display: false } } }, plugins: { legend: { display: false } } }
+        });
+
+        // 4. 8科計時邏輯
+        function toggleTimer(id) {
+            const t = timers[id];
+            if (t.run) { stopTimer(id); } 
+            else {
+                // 暫停其他所有科目
+                Object.keys(timers).forEach(k => { if(timers[k].run) stopTimer(k); });
+                startTimer(id);
+            }
+        }
+
+        function startTimer(id) {
+            const t = timers[id];
+            const btn = document.getElementById(`btn-${id}`);
+            const card = document.getElementById(`card-${id}`);
+            t.run = true;
+            btn.innerText = "暫停"; btn.classList.replace('bg-blue-600', 'bg-red-500');
+            card.classList.add('active');
+            t.iv = setInterval(() => {
+                t.s++;
+                const fmt = s => new Date(s * 1000).toISOString().substr(11, 8);
+                document.getElementById(`timer-${id}`).innerText = fmt(t.s);
+                // 更新雷達圖 (以分鐘為單位)
+                const idx = Object.keys(timers).indexOf(id);
+                radarChart.data.datasets[0].data[idx] = t.s / 60;
+                radarChart.update('none');
+            }, 1000);
+        }
+
+        function stopTimer(id) {
+            const t = timers[id];
+            const btn = document.getElementById(`btn-${id}`);
+            const card = document.getElementById(`card-${id}`);
+            t.run = false;
+            btn.innerText = "開始"; btn.classList.replace('bg-red-500', 'bg-blue-600');
+            card.classList.remove('active');
+            clearInterval(t.iv);
+        }
+
+        // 5. AI 診斷引擎
+        function handleImage(i) {
+            const r = new FileReader();
+            r.onload = e => { document.getElementById('imgPreview').src = e.target.result; document.getElementById('previewContainer').classList.remove('hidden'); base64Image = e.target.result.split(',')[1]; };
+            r.readAsDataURL(i.files[0]);
+        }
+
+        document.getElementById('aiBtn').addEventListener('click', async function() {
+            const txt = document.getElementById('aiInput').value;
+            if(!txt && !base64Image) return;
+            this.innerText = "🔍 分析中...";
+            document.getElementById('aiResponse').classList.remove('hidden');
+            try {
+                const k = "AIzaSyDsRyI7A6mXQMlW6_98H0UKF-k6phVVQ8k";
+                const parts = [{ text: "你是學習導航員。分析：1.詳解($公式) 2.單元 3.⚠️盲區診斷(缺乏與誤解觀念) 4.建議。" }];
+                if (txt) parts.push({ text: txt });
+                if (base64Image) parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Image } });
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts }] })
+                });
+                const d = await res.json();
+                document.getElementById('aiText').innerText = d.candidates[0].content.parts[0].text;
+                if (window.MathJax) MathJax.typesetPromise();
+            } catch (e) { document.getElementById('aiText').innerText = "連線失敗"; }
+            finally { this.innerText = "開始診斷"; }
+        });
+
+        // 拍照 (簡化版)
+        async function openShareModal() { document.getElementById('shareModal').classList.remove('hidden'); const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); document.getElementById('webcam').srcObject = stream; }
+        function closeShareModal() { document.getElementById('shareModal').classList.add('hidden'); const s = document.getElementById('webcam').srcObject; if(s) s.getTracks().forEach(t => t.stop()); }
+        function takeSnap() { alert("圖片已合成並儲存！"); }
+    </script>
+</body>
+</html>
