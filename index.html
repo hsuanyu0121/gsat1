@@ -211,75 +211,118 @@
         }
 
         // ======= 3. AI 診斷引擎 =======
-   document.getElementById('aiBtn').addEventListener('click', async function() {
-    const txt = document.getElementById('aiInput').value;
-    if(!txt && !base64Image) return alert("請輸入文字或提供照片！");
-    
-    this.innerText = "🔍 診斷中...";
-    document.getElementById('aiResponse').classList.remove('hidden');
-    document.getElementById('aiText').innerText = "正在分析題目邏輯與潛在盲區...";
+ <script>
+    // 1. 【全域變數】必須放在最外層，確保所有功能都能讀取圖片數據
+    let base64Image = null; 
 
-    try {
-        const k = "AIzaSyDsRyI7A6mXQMlW6_98H0UKF-k6phVVU8k"; // 確保這是你申請的有效 Key
-        
-        // 1. 準備發送給 AI 的內容
-        const parts = [{
-            text: `你現在是 P!LOT 系統的 AI 導航員。請針對學生提供的題目進行深度診斷。
-            回傳格式必須嚴格遵守：
-            1. 【題目深度解析】：提供簡潔邏輯，數學公式用 $...$ 包圍。
-            2. 【命題章節】：指出屬於高中課程哪個單元。
-            3. 【⚠️ 盲區診斷】：精準點出學生「缺乏什麼觀念」以及「可能誤解的觀念」。
-            4. 【補救建議】：給予一句話的觀念點破。`
-        }];
-        
-        if (txt) parts.push({ text: txt });
-        if (base64Image) parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Image } });
+    // 2. 【圖片處理】處理使用者上傳或拍攝的題目照片
+    function handleImage(input) {
+        const file = input.files[0];
+        if (!file) return;
 
-        // 2. 正式發送請求給 Gemini (你原本漏掉這段)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ parts }] })
-        });
+        const reader = new FileReader();
+        reader.onload = e => { 
+            // 顯示預覽圖
+            document.getElementById('imgPreview').src = e.target.result;
+            document.getElementById('previewContainer').classList.remove('hidden');
+            
+            // 核心：將圖片轉為 base64 字串供 AI 讀取
+            base64Image = e.target.result.split(',')[1];
+        };
+        reader.readAsDataURL(file);
+    }
 
-        const data = await response.json();
-        
-        // 檢查 API 是否回傳錯誤
-        if (data.error) {
-            throw new Error(data.error.message);
+    // 清除已選取的圖片
+    function clearImage() {
+        document.getElementById('previewContainer').classList.add('hidden');
+        document.getElementById('imgPreview').src = "";
+        base64Image = null;
+        document.getElementById('fileInput').value = ""; // 清空 input 欄位
+    }
+
+    // 3. 【AI 診斷執行】按下按鈕後的完整流程
+    document.getElementById('aiBtn').addEventListener('click', async function() {
+        const txt = document.getElementById('aiInput').value;
+
+        // 檢查是否有輸入內容
+        if(!txt && !base64Image) {
+            alert("請輸入題目文字或拍攝一張照片！");
+            return;
         }
+        
+        // UI 回饋：顯示載入狀態
+        this.innerText = "🔍 診斷中...";
+        this.disabled = true;
+        document.getElementById('aiResponse').classList.remove('hidden');
+        document.getElementById('aiText').innerText = "📡 正在連接 P!LOT 導航員，分析題目盲區中...";
 
-        const aiResponseText = data.candidates[0].content.parts[0].text;
+        try {
+            // 請確保此金鑰有效，且已在 Google AI Studio 啟用
+            const k = "AIzaSyDsRyI7A6mXQMlW6_98H0UKF-k6phVVU8k"; 
+            
+            // 設定給 AI 的診斷指令 (Prompt)
+            const parts = [{
+                text: `你現在是 P!LOT 系統的 AI 導航員。請針對學生提供的題目進行深度診斷。
+                請嚴格遵守回傳格式：
+                1. 【題目深度解析】：提供邏輯詳解，數學公式請用 $...$ 包圍。
+                2. 【命題章節】：指出此題屬於高中課程的哪個單元。
+                3. 【⚠️ 盲區診斷】：精準點出學生「缺乏什麼觀念」以及「可能誤解的觀念」。
+                4. 【補救建議】：給予一句話的觀念點破。`
+            }];
+            
+            // 加入使用者輸入的文字或圖片
+            if (txt) parts.push({ text: txt });
+            if (base64Image) {
+                parts.push({
+                    inline_data: { mime_type: "image/jpeg", data: base64Image }
+                });
+            }
 
-        // 3. 顯示結果到畫面上
-        document.getElementById('aiText').innerText = aiResponseText;
-
-        // 4. 渲染數學公式
-        if (window.MathJax) MathJax.typesetPromise();
-
-        // 5. 成功拿到回答後，才存入 Firebase
-        if (auth.currentUser) {
-            const db = firebase.firestore();
-            db.collection("diagnostics").add({
-                uid: auth.currentUser.uid,
-                question: txt || "圖片題目",
-                diagnosis: aiResponseText, // 現在這個變數有值了！
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                if (typeof updateHistoryList === "function") updateHistoryList();
+            // 執行 API 請求
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts }] })
             });
-        }
+
+            const data = await response.json();
+
+            // 錯誤處理
+            if (data.error) throw new Error(data.error.message);
+
+            // 取得回傳文字
+            const aiResponseText = data.candidates[0].content.parts[0].text;
+
+            // 將結果渲染至網頁
+            document.getElementById('aiText').innerText = aiResponseText;
+
+            // 若有數學公式，觸發 MathJax 渲染
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+
+            // 儲存至雲端錯題庫 (若有登入)
+            if (typeof auth !== 'undefined' && auth.currentUser) {
+                const db = firebase.firestore();
+                db.collection("diagnostics").add({
+                    uid: auth.currentUser.uid,
+                    question: txt || "圖片題目",
+                    diagnosis: aiResponseText,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    if (typeof updateHistoryList === 'function') updateHistoryList();
+                });
+            }
+
         } catch (e) { 
-    console.error("錯誤詳情:", e);
-    // 這行會把真正的錯誤原因印在原本顯示 AI 回答的地方
-    document.getElementById('aiText').innerText = "❌ 失敗原因：" + e.message; 
-}
-        //console.error(e); // 在開發者工具可以看到詳細錯誤
-       // document.getElementById('aiText').innerText = "連線失敗: " + e.message; 
-   //} finally { 
-      //  this.innerText = "開始深度診斷"; 
-   // }
-//});
+            console.error("Gemini API Error:", e);
+            document.getElementById('aiText').innerText = "❌ 診斷失敗：" + e.message; 
+        } finally { 
+            this.innerText = "開始深度診斷"; 
+            this.disabled = false;
+        }
+    });
+</script>
 
         // ======= 4. 相機與分享功能 =======
         async function openShareModal() {
