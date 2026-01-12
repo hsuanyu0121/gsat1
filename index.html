@@ -269,14 +269,17 @@
                 if (typeof updateHistoryList === "function") updateHistoryList();
             });
         }
-
-    } catch (e) { 
-        console.error(e); // 在開發者工具可以看到詳細錯誤
-        document.getElementById('aiText').innerText = "連線失敗: " + e.message; 
-    } finally { 
-        this.innerText = "開始深度診斷"; 
-    }
-});
+        } catch (e) { 
+    console.error("錯誤詳情:", e);
+    // 這行會把真正的錯誤原因印在原本顯示 AI 回答的地方
+    document.getElementById('aiText').innerText = "❌ 失敗原因：" + e.message; 
+}
+        //console.error(e); // 在開發者工具可以看到詳細錯誤
+       // document.getElementById('aiText').innerText = "連線失敗: " + e.message; 
+   //} finally { 
+      //  this.innerText = "開始深度診斷"; 
+   // }
+//});
 
         // ======= 4. 相機與分享功能 =======
         async function openShareModal() {
