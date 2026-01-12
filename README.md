@@ -4,7 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>P!LOT | AI 視覺導航系統</title>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    // 3. Firebase 邏輯設定 (放在 script 標籤的最上方)
+const firebaseConfig = {
+    apiKey: "你的_API_KEY",
+    authDomain: "你的_AUTH_DOMAIN",
+    projectId: "你的_PROJECT_ID",
+    storageBucket: "你的_STORAGE_BUCKET",
+    messagingSenderId: "你的_SENDER_ID",
+    appId: "你的_APP_ID"
+};
+
+// 初始化並執行
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
+
+function signInWithGoogle() {
+    auth.signInWithPopup(provider).catch((error) => alert("登入失敗: " + error.message));
+}
+
+function signOut() {
+    auth.signOut().then(() => alert("已登出"));
+}
+
+// 監聽登入狀態並自動改版面
+auth.onAuthStateChanged((user) => {
+    const loginGroup = document.getElementById('loginGroup');
+    const userInfo = document.getElementById('userInfo');
+    if (user) {
+        loginGroup.classList.add('hidden');
+        userInfo.classList.remove('hidden');
+        document.getElementById('userName').innerText = user.displayName;
+        document.getElementById('userAvatar').src = user.photoURL;
+    } else {
+        loginGroup.classList.remove('hidden');
+        userInfo.classList.add('hidden');
+    }
+});
     <script>window.MathJax = { tex: { inlineMath: [['$', '$']] } };</script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
