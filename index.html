@@ -211,50 +211,71 @@
         }
 
         // ======= 3. AI 診斷引擎 =======
-        let base64Image = null;
-        function handleImage(i) {
-            const reader = new FileReader();
-            reader.onload = e => { 
-                document.getElementById('imgPreview').src = e.target.result;
-                document.getElementById('previewContainer').classList.remove('hidden');
-                base64Image = e.target.result.split(',')[1];
-            };
-            reader.readAsDataURL(i.files[0]);
+   document.getElementById('aiBtn').addEventListener('click', async function() {
+    const txt = document.getElementById('aiInput').value;
+    if(!txt && !base64Image) return alert("請輸入文字或提供照片！");
+    
+    this.innerText = "🔍 診斷中...";
+    document.getElementById('aiResponse').classList.remove('hidden');
+    document.getElementById('aiText').innerText = "正在分析題目邏輯與潛在盲區...";
+
+    try {
+        const k = "AIzaSyDsRyI7A6mXQMlW6_98H0UKF-k6phVVU8k"; // 確保這是你申請的有效 Key
+        
+        // 1. 準備發送給 AI 的內容
+        const parts = [{
+            text: `你現在是 P!LOT 系統的 AI 導航員。請針對學生提供的題目進行深度診斷。
+            回傳格式必須嚴格遵守：
+            1. 【題目深度解析】：提供簡潔邏輯，數學公式用 $...$ 包圍。
+            2. 【命題章節】：指出屬於高中課程哪個單元。
+            3. 【⚠️ 盲區診斷】：精準點出學生「缺乏什麼觀念」以及「可能誤解的觀念」。
+            4. 【補救建議】：給予一句話的觀念點破。`
+        }];
+        
+        if (txt) parts.push({ text: txt });
+        if (base64Image) parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Image } });
+
+        // 2. 正式發送請求給 Gemini (你原本漏掉這段)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts }] })
+        });
+
+        const data = await response.json();
+        
+        // 檢查 API 是否回傳錯誤
+        if (data.error) {
+            throw new Error(data.error.message);
         }
-        function clearImage() { document.getElementById('previewContainer').classList.add('hidden'); base64Image = null; }
 
-        document.getElementById('aiBtn').addEventListener('click', async function() {
-            const txt = document.getElementById('aiInput').value;
-            if(!txt && !base64Image) return alert("請輸入文字或提供照片！");
-            
-            this.innerText = "🔍 診斷中...";
-            document.getElementById('aiResponse').classList.remove('hidden');
-            document.getElementById('aiText').innerText = "正在分析題目邏輯與潛在盲區...";
+        const aiResponseText = data.candidates[0].content.parts[0].text;
 
-            try {
-                const k = "AIzaSyDsRyI7A6mXQMlW6_98H0UKF-k6phVVQ8k";
-                const parts = [{
-                    text: `你現在是 P!LOT 系統的 AI 導航員。請針對學生提供的題目進行深度診斷。
-                    回傳格式必須嚴格遵守：
-                    1. 【題目深度解析】：提供簡潔邏輯，數學公式用 $...$ 包圍。
-                    2. 【命題章節】：指出屬於高中課程哪個單元。
-                    3. 【⚠️ 盲區診斷】：精準點出學生「缺乏什麼觀念」以及「可能誤解的觀念」。
-                    4. 【補救建議】：給予一句話的觀念點破。`
-                }];
-                // 接著原本的 txt 與 base64 判斷...
-            if (auth.currentUser) {
-                const db = firebase.firestore();
-                db.collection("diagnostics").add({
+        // 3. 顯示結果到畫面上
+        document.getElementById('aiText').innerText = aiResponseText;
+
+        // 4. 渲染數學公式
+        if (window.MathJax) MathJax.typesetPromise();
+
+        // 5. 成功拿到回答後，才存入 Firebase
+        if (auth.currentUser) {
+            const db = firebase.firestore();
+            db.collection("diagnostics").add({
                 uid: auth.currentUser.uid,
                 question: txt || "圖片題目",
-                diagnosis: aiResponseText,
+                diagnosis: aiResponseText, // 現在這個變數有值了！
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => updateHistoryList()); // 儲存完自動更新右側清單
+            }).then(() => {
+                if (typeof updateHistoryList === "function") updateHistoryList();
+            });
         }
 
-        if (window.MathJax) MathJax.typesetPromise();
-    } catch (e) { document.getElementById('aiText').innerText = "連線失敗"; }
-    finally { this.innerText = "開始深度診斷"; }
+    } catch (e) { 
+        console.error(e); // 在開發者工具可以看到詳細錯誤
+        document.getElementById('aiText').innerText = "連線失敗: " + e.message; 
+    } finally { 
+        this.innerText = "開始深度診斷"; 
+    }
 });
 
         // ======= 4. 相機與分享功能 =======
