@@ -223,24 +223,33 @@
             
             this.innerText = "🔍 診斷中...";
             document.getElementById('aiResponse').classList.remove('hidden');
-            document.getElementById('aiText').innerText = "AI 導航員正在分析題目邏輯與潛在盲區...";
+            document.getElementById('aiText').innerText = "正在分析題目邏輯與潛在盲區...";
 
             try {
                 const k = "AIzaSyDsRyI7A6" + "mXQMlW6_98H0UKF-k6phVVU8k";
-                const parts = [{ text: "你是學習導航員，請分析此題：1.詳解($公式) 2.核心章節 3.盲區診斷建議。" }];
-                if (txt) parts.push({ text: txt });
-                if (base64Image) parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Image } });
+                const parts = [{
+                    text: `你現在是 P!LOT 系統的 AI 導航員。請針對學生提供的題目進行深度診斷。
+                    回傳格式必須嚴格遵守：
+                    1. 【題目深度解析】：提供簡潔邏輯，數學公式用 $...$ 包圍。
+                    2. 【命題章節】：指出屬於高中課程哪個單元。
+                    3. 【⚠️ 盲區診斷】：精準點出學生「缺乏什麼觀念」以及「可能誤解的觀念」。
+                    4. 【補救建議】：給予一句話的觀念點破。`
+                }];
+                // 接著原本的 txt 與 base64 判斷...
+            if (auth.currentUser) {
+                const db = firebase.firestore();
+                db.collection("diagnostics").add({
+                uid: auth.currentUser.uid,
+                question: txt || "圖片題目",
+                diagnosis: aiResponseText,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => updateHistoryList()); // 儲存完自動更新右側清單
+        }
 
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${k}`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts }] })
-                });
-                const d = await res.json();
-                document.getElementById('aiText').innerText = d.candidates[0].content.parts[0].text;
-                if (window.MathJax) MathJax.typesetPromise();
-            } catch (e) { document.getElementById('aiText').innerText = "連線失敗，請檢查網路或金鑰。"; }
-            this.innerText = "開始深度診斷";
-        });
+        if (window.MathJax) MathJax.typesetPromise();
+    } catch (e) { document.getElementById('aiText').innerText = "連線失敗"; }
+    finally { this.innerText = "開始深度診斷"; }
+});
 
         // ======= 4. 相機與分享功能 =======
         async function openShareModal() {
