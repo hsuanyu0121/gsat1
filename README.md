@@ -4,16 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>P!LOT | AI 視覺導航系統</title>
+    <script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     // 3. Firebase 邏輯設定 (放在 script 標籤的最上方)
 const firebaseConfig = {
-    apiKey: "你的_API_KEY",
-    authDomain: "你的_AUTH_DOMAIN",
-    projectId: "你的_PROJECT_ID",
-    storageBucket: "你的_STORAGE_BUCKET",
-    messagingSenderId: "你的_SENDER_ID",
-    appId: "你的_APP_ID"
+    apiKey: "AIzaSyBNmnC1QQVwBMgTgjUVLw4xXZxIrVlAV6c",
+  authDomain: "gsat1-29951.firebaseapp.com",
+  projectId: "gsat1-29951",
+  storageBucket: "gsat1-29951.firebasestorage.app",
+  messagingSenderId: "165497162624",
+  appId: "1:165497162624:web:9ed2b73dc6db035cadcf65",
+  measurementId: "G-89J4P5W7MP"
 };
 
 // 初始化並執行
@@ -29,8 +31,8 @@ function signOut() {
     auth.signOut().then(() => alert("已登出"));
 }
 
-// 監聽登入狀態並自動改版面
-auth.onAuthStateChanged((user) => {
+    // 監聽登入狀態並自動改版面
+    auth.onAuthStateChanged((user) => {
     const loginGroup = document.getElementById('loginGroup');
     const userInfo = document.getElementById('userInfo');
     if (user) {
@@ -41,8 +43,9 @@ auth.onAuthStateChanged((user) => {
     } else {
         loginGroup.classList.remove('hidden');
         userInfo.classList.add('hidden');
-    }
-});
+        }
+    });
+    </script>
     <script>window.MathJax = { tex: { inlineMath: [['$', '$']] } };</script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
